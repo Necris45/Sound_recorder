@@ -1,12 +1,12 @@
 import pyaudio
 import wave
-# import pydub
+from pydub import AudioSegment
 
 chunk = 1024  # Запись кусками по 1024 сэмпла
 sample_format = pyaudio.paInt16  # 16 бит на выборку
 channels = 2
 rate = 44100  # Запись со скоростью 44100 выборок(samples) в секунду
-seconds = 5
+seconds = 10
 filename1 = "input_sound.wav"
 filename2 = "output_sound.wav"
 p = pyaudio.PyAudio()  # Создать интерфейс для PortAudio
@@ -60,3 +60,9 @@ wf1.writeframes(b''.join(frames1))
 wf2.writeframes(b''.join(frames2))
 wf1.close()
 wf2.close()
+
+# Объединяем имеющиеся wav файлы в единый mp3 файл
+sound1 = AudioSegment.from_file("input_sound.wav", format="wav")
+sound2 = AudioSegment.from_file("output_sound.wav", format="wav")
+sound = sound1.overlay(sound2)
+sound.export("mixin.mp3", format='mp3')
