@@ -1,8 +1,4 @@
 import sys
-import pyaudio
-import wave
-from pydub import AudioSegment
-from PyQt5.QtWidgets import *
 from recorder import *
 
 if __name__ == "__main__":
