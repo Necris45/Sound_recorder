@@ -1,5 +1,6 @@
 import pyaudio
 import wave
+# import pydub
 
 chunk = 1024  # Запись кусками по 1024 сэмпла
 sample_format = pyaudio.paInt16  # 16 бит на выборку
@@ -16,15 +17,15 @@ stream1 = p.open(format=sample_format,
                  channels=channels,
                  rate=rate,
                  frames_per_buffer=chunk,
-                 input_device_index=1,  # индекс устройства с которого будет идти запись звука
+                 input_device_index=2,  # индекс устройства с которого будет идти запись звука (микрофон)
                  input=True)
 
 stream2 = p.open(format=sample_format,
                  channels=channels,
                  rate=rate,
                  frames_per_buffer=chunk,
-                 input_device_index=3,  # индекс устройства с которого будет идти запись звука
-                 as_loopback=True)
+                 input_device_index=1,  # индекс устройства с которого будет идти запись звука (стереомикшер)
+                 input=True)
 
 frames1 = []  # Инициализировать массив для хранения
 frames2 = []  # Инициализировать массив для хранения
