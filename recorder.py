@@ -8,10 +8,9 @@ chunk = 1024  # Запись кусками по 1024 сэмпла
 sample_format = pyaudio.paInt16  # 16 бит на выборку
 channels = 2
 rate = 44100  # Запись со скоростью 44100 выборок(samples) в секунду
-seconds = 10
+seconds = 2048
 filename1 = "input_sound.wav"
 filename2 = "output_sound.wav"
-
 
 def stop_record():
     # Остановить и закрыть поток
@@ -21,9 +20,6 @@ def stop_record():
     stream2.close()
     # Завершить интерфейс PortAudio
     p.terminate()
-
-
-def save_sound():
     # Сохранить записанные данные в виде файла wav
     wf1 = wave.open(filename1, 'wb')
     wf1.setnchannels(channels)
@@ -44,46 +40,54 @@ def save_sound():
     sound = sound1.overlay(sound2)
     sound.export("mixin.mp3", format='mp3')
 
+def record():
+    p = pyaudio.PyAudio()  # Создать интерфейс для PortAudio
+    stream1 = p.open(format=sample_format,
+                     channels=channels,
+                     rate=rate,
+                     frames_per_buffer=chunk,
+                     input_device_index=2,  # индекс устройства с которого будет идти запись звука (микрофон)
+                     input=True)
+    if self.drop1.currentText() != "Запись только с микрофона":
+        stream2 = p.open(format=sample_format,
+                         channels=channels,
+                         rate=rate,
+                         frames_per_buffer=chunk,
+                         input_device_index=1,  # индекс устройства с которого будет идти запись (стереомикшер)
+                         input=True)
+    frames1 = []  # Инициализировать массив для хранения данных с микрофона
+    frames2 = []  # Инициализировать массив для хранения данных с стереомикшера
+    if self.drop1.currentText() != "Запись только с микрофона":
+        for i in range(0, int(rate / chunk * seconds)):
+            data1 = stream1.read(chunk)
+            frames1.append(data1)
+            data2 = stream2.read(chunk)
+            frames2.append(data2)
+            if i >= 88200:
+                stop_record()
+    else:
+        for i in range(0, int(rate / chunk * seconds)):
+            data1 = stream1.read(chunk)
+            frames1.append(data1)
+            if i >= 88200:
+                stop_record()
+
 
 class Recorder(QWidget):
-
-    chunk = 1024  # Запись кусками по 1024 сэмпла
-    sample_format = pyaudio.paInt16  # 16 бит на выборку
-    channels = 2
-    rate = 44100  # Запись со скоростью 44100 выборок(samples) в секунду
-    seconds = 10
 
     def __init__(self):
         QWidget.__init__(self)
         self.drop1 = QComboBox(self)
         self.drop1.addItems(["Запись только с микрофона", "Запись всего звука"])
         self.drop1.show()
+        self.label1 = QLabel(self)
+        self.label1.setText('Нажмите кнопку для записи')
+        self.label1.setGeometry(5, 25, 180, 13)
         self.button1 = QPushButton(self)
-        self.button1.move(180, 0)
-
-    def record(self):
-        p = pyaudio.PyAudio()  # Создать интерфейс для PortAudio
-        stream1 = p.open(format=sample_format,
-                         channels=channels,
-                         rate=rate,
-                         frames_per_buffer=chunk,
-                         input_device_index=2,  # индекс устройства с которого будет идти запись звука (микрофон)
-                         input=True)
-        if self.drop1.currentText() != "Запись только с микрофона":
-            stream2 = p.open(format=sample_format,
-                             channels=channels,
-                             rate=rate,
-                             frames_per_buffer=chunk,
-                             input_device_index=1,  # индекс устройства с которого будет идти запись (стереомикшер)
-                             input=True)
-        frames1 = []  # Инициализировать массив для хранения данных с микрофона
-        frames2 = []  # Инициализировать массив для хранения данных с стереомикшера
-        if self.drop1.currentText() != "Запись только с микрофона":
-            for i in range(0, int(rate / chunk * seconds)):
-                data1 = stream1.read(chunk)
-                frames1.append(data1)
-                data2 = stream2.read(chunk)
-                frames2.append(data2)
-            else:
-                data1 = stream1.read(chunk)
-                frames1.append(data1)
+        self.button1.setGeometry(180, 0, 50, 50)
+        self.button1.setText('Запись')
+        self.button2 = QPushButton(self)
+        self.button2.setGeometry(233, 0, 50, 50)
+        self.button2.setText('Стоп')
+        self.button1.clicked.connect(record())
+        self.button2.clicked.connect(stop_record())
