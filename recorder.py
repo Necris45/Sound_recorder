@@ -149,8 +149,6 @@ class My_window(QWidget):
         self.drop3.setEnabled(False)
         self.button2.setEnabled(True)
         self.record.rec_start = 1
-        device1 = self.drop1.currentText()
-        device2 = self.drop2.currentText()
         print(self.devices_dict[self.drop1.currentText()])
         print(self.devices_dict[self.drop2.currentText()])
         if self.drop3.currentText() == "Запись только с микрофона":
