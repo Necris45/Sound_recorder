@@ -42,21 +42,39 @@ class Recorder(QtCore.QObject):
     def run(self):
         self.current_time = str(time.strftime("%Y-%m-%d-%H.%M.%S", time.localtime()))
         if self.device_used == 2:
-            self.stream1.start_stream()
-            self.stream2.start_stream()
+            stream1 = self.p.open(format=self.sample_format,
+                                  channels=self.channels,
+                                  rate=self.rate,
+                                  frames_per_buffer=self.chunk,
+                                  # индекс устройства с которого будет идти запись звука
+                                  input_device_index=self.device1_index,
+                                  input=True)
+            stream2 = self.p.open(format=self.sample_format,
+                                  channels=self.channels,
+                                  rate=self.rate,
+                                  frames_per_buffer=self.chunk,
+                                  # индекс устройства с которого будет идти запись звука
+                                  input_device_index=self.device2_index,
+                                  input=True)
             while self.rec_start == 1:
-                data1 = self.stream1.read(self.chunk)
+                data1 = stream1.read(self.chunk)
                 self.frames1.append(data1)
-                data2 = self.stream2.read(self.chunk)
+                data2 = stream2.read(self.chunk)
                 self.frames2.append(data2)
-            self.stream1.stop_stream()
-            self.stream2.stop_stream()
+            stream1.stop_stream()
+            stream2.stop_stream()
         elif self.device_used == 1:
-            self.stream1.start_stream()
+            stream1 = self.p.open(format=self.sample_format,
+                                  channels=self.channels,
+                                  rate=self.rate,
+                                  frames_per_buffer=self.chunk,
+                                  # индекс устройства с которого будет идти запись звука
+                                  input_device_index=self.device1_index,
+                                  input=True)
             while self.rec_start == 1:
-                data1 = self.stream1.read(self.chunk)
+                data1 = stream1.read(self.chunk)
                 self.frames1.append(data1)
-            self.stream1.stop_stream()
+            stream1.stop_stream()
         # Сохранить записанные данные в виде файла wav
         wf1 = wave.open(self.filename1, 'wb')
         wf1.setnchannels(self.channels)
@@ -93,14 +111,13 @@ class My_window(QWidget):
         device_count = host_info.get('deviceCount')
         self.devices = list()
         self.devices_dict = {}
-        # iterate between devices:
+        # переюором заполняем словарь и список устройств:
         for i in range(0, device_count):
             device = self.p1.get_device_info_by_host_api_device_index(0, i)
             self.devices.append(device['name'])
             key = device['name']
             index = device['index']
             self.devices_dict[key] = index
-        print(self.devices_dict)
         QWidget.__init__(self)
         # создадим поток
         self.thread = QtCore.QThread()
@@ -125,17 +142,17 @@ class My_window(QWidget):
         self.drop2.setGeometry(155, 20, 145, 20)
         self.drop2.show()
         self.drop3 = QComboBox(self)
-        self.drop3.addItems(["Запись только с микрофона", "Запись всего звука"])
+        self.drop3.addItems(["Запись с первого устройства", "Запись с двух устройств"])
         self.drop3.setGeometry(5, 50, 170, 20)
         self.drop3.show()
         self.label3 = QLabel(self)
         self.label3.setText('Нажмите кнопку для записи')
-        self.label3.setGeometry(5, 75, 180, 13)
+        self.label3.setGeometry(5, 75, 180, 26)
         self.button1 = QPushButton(self)
-        self.button1.setGeometry(180, 50, 50, 45)
+        self.button1.setGeometry(180, 50, 60, 50)
         self.button1.setText('запись')
         self.button2 = QPushButton(self)
-        self.button2.setGeometry(233, 50, 50, 45)
+        self.button2.setGeometry(242, 50, 60, 50)
         self.button2.setText('Стоп')
         self.button2.setEnabled(False)
         self.button1.clicked.connect(self.rec)
@@ -149,13 +166,14 @@ class My_window(QWidget):
         self.drop3.setEnabled(False)
         self.button2.setEnabled(True)
         self.record.rec_start = 1
-        print(self.devices_dict[self.drop1.currentText()])
-        print(self.devices_dict[self.drop2.currentText()])
-        if self.drop3.currentText() == "Запись только с микрофона":
+        self.record.device1_index = self.devices_dict[self.drop1.currentText()]
+        self.record.device2_index = self.devices_dict[self.drop2.currentText()]
+        if self.drop3.currentText() == "Запись с первого устройства":
             self.record.device_used = 1
         else:
             self.record.device_used = 2
         self.thread.start()
+        self.label3.setText('Идет запись\nДля остановки нажми Стоп')
 
     def stop(self):
         self.record.rec_start = 0
@@ -164,8 +182,8 @@ class My_window(QWidget):
     def done(self):
         self.thread.quit()
         self.thread.wait(1000)
-        print('stopped')
         self.button1.setEnabled(True)
         self.drop1.setEnabled(True)
         self.drop2.setEnabled(True)
         self.drop3.setEnabled(True)
+        self.label3.setText('Нажмите кнопку для записи')
