@@ -13,23 +13,9 @@ class Recorder(QtCore.QObject):
     sample_format = pyaudio.paInt16  # 16 бит на выборку
     channels = 2
     rate = 44100  # Запись со скоростью 44100 выборок(samples) в секунду
-    filename1 = "input_sound.wav"
-    filename2 = "output_sound.wav"
+    filename1 = "device1_sound.wav"
+    filename2 = "device2_sound.wav"
     p = pyaudio.PyAudio()  # Создать интерфейс для PortAudio
-    stream1 = p.open(format=sample_format,
-                     channels=channels,
-                     rate=rate,
-                     frames_per_buffer=chunk,
-                     input_device_index=1,  # индекс устройства с которого будет идти запись звука (микрофон)
-                     input=True)
-    stream2 = p.open(format=sample_format,
-                     channels=channels,
-                     rate=rate,
-                     frames_per_buffer=chunk,
-                     input_device_index=2,  # индекс устройства с которого будет идти запись (стереомикшер)
-                     input=True)
-    stream1.stop_stream()
-    stream2.stop_stream()
     frames1 = []  # Инициализировать массив для хранения данных с микрофона
     frames2 = []  # Инициализировать массив для хранения данных с стереомикшера
     finished = pyqtSignal()
@@ -111,7 +97,7 @@ class My_window(QWidget):
         device_count = host_info.get('deviceCount')
         self.devices = list()
         self.devices_dict = {}
-        # переюором заполняем словарь и список устройств:
+        # заполняем словарь и список устройств:
         for i in range(0, device_count):
             device = self.p1.get_device_info_by_host_api_device_index(0, i)
             self.devices.append(device['name'])
@@ -186,4 +172,4 @@ class My_window(QWidget):
         self.drop1.setEnabled(True)
         self.drop2.setEnabled(True)
         self.drop3.setEnabled(True)
-        self.label3.setText('Нажмите кнопку для записи')
+        self.label3.setText('Запись завершена и сохранена\nНажмите кнопку для записи')
